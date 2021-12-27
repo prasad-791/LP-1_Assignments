@@ -1,0 +1,289 @@
+==============================================================================
+======================================HEADER==================================
+==============================================================================
+
+
+/*
+ * ShortestDistance.h
+ *
+ *  Created on: 21-Oct-2021
+ *      Author: SHUBHAM SARDAR
+ */
+
+#ifndef SHORTESTDISTANCE_H_
+#define SHORTESTDISTANCE_H_
+
+
+class ShortestDistance {
+private:
+	char vertex_array[20];	// names of vertices
+	int vertices, edges;	// no of vertices and edges
+	int visited[20];	// is 1 if vertex is visited otherwise 0
+	int previous[20];	// for tracing path taken
+	int cost_matrix[20][20];	// adjacency list for graph
+	int getVertex_i(char c);	// helper method to get vertex index
+	// to deduce cost matrix row-wise and column-wise
+	int row_col_deduction(int matrix[][20]);	
+public:
+	ShortestDistance();	// constructor
+	void createGraph();	// method to create graph
+	void travellingSalesman();	// travellign salesman algo
+	virtual ~ShortestDistance();
+};
+
+#endif /* SHORTESTDISTANCE_H_ */
+
+
+
+==============================================================================
+===================================IMPLEMENTATION=============================
+==============================================================================
+
+/*
+ * ShortestDistance.cpp
+ *
+ *  Created on: 21-Oct-2021
+ *      Author: SHUBHAM SARDAR
+ */
+
+#include "ShortestDistance.h"
+#include <iostream>
+using namespace std;
+
+// constructor
+ShortestDistance::ShortestDistance() {
+	for (i=0; i<vertices; i++) visited[i] = 0;
+	createGraph();	// invoking createGraph function	
+}
+
+// returns index of the vertex
+int ShortestDistance::getVertex_i(char c){
+	for (int i=0; i<vertices; i++){
+		if (c == vertex_array[i]) return i;
+	}
+	cout << "Error!"<< endl;
+	return -1;
+}
+
+// method to create graph
+void ShortestDistance::createGraph(){
+	int i, j, u, v, wt;
+	char c1, c2;
+	// no of vertex and edges
+	cout << "Enter no of Vertices: ";
+	cin >> vertices;
+	cout << "Enter no of Edges: ";
+	cin >> edges;
+	cout << "Enter Vertices name: ";
+	for(i=0; i<vertices; i++) cin >> vertex_array[i];
+	// intializing cost matrix to maximum value
+	for (i=0; i<vertices; i++){
+		for (j=0; j<vertices; j++)adjMatrix[i][j] = 444;
+	}
+	// taking input for edges
+	cout << "Enter Vertex name, src vertex, dest vertex, and Weight: -" << endl;
+	for (i=0; i<edges; i++){
+		cout << "Edge " << i << ": " ;
+		cin >> c1 >> c2 >> wt;
+		u = getVertex_i(c1);
+		v = getVertex_i(c2);
+		adjMatrix[u][v] = wt;
+	}
+	cout << "Graph Created Successfully!" << endl;
+	// printing the cost matrix
+	cout << "\nCost Matrix is: " << endl;
+	for(i=0; i<vertices; i++){
+		for(j=0; j<vertices; j++) cout << matrix[i][j] << " ";
+		cout << endl;
+	}
+}
+
+// method to deduce the cost matrix
+// parameter is the cost matrix
+// returns cost after row and column deduction 
+int ShortestDistance::row_col_deduction(int matrix[][20]){
+	int i, j, min, cost;
+	cost = 0;
+	// row deduction
+	for(i=0; i<vertices; i++){
+		min = 444;
+		for(j=0; j<vertices; j++){
+			if(matrix[i][j] < min) min = matrix[i][j];
+		}
+		// subtracting min for a row
+		for (j=0; j<vertices; j++){
+			if (matrix[i][j] == 444 || min==444) continue;
+			matrix[i][j] = matrix[i][j] - min;
+		}
+		if (min != 444) cost = cost + min;
+	}
+
+	// col deduction
+	for(i=0; i<vertices; i++){
+		min = 444;
+		for(j=0; j<vertices; j++){
+			if(matrix[j][i] < min) min = matrix[j][i];
+		}
+		// subtracting min for a col
+		for (j=0; j<vertices; j++){
+			if (matrix[j][i] == 444 || min==444) continue;
+			matrix[j][i] = matrix[j][i] - min;
+		}
+		if (min != 444) cost = cost + min;
+	}
+	return cost;
+}
+
+
+void ShortestDistance::travellingSalesman(){
+	int i, v, m, n, mincost, current, next, cost;
+	int temp_matrix[20][20];
+	int temp2_matrix[20][20];
+
+	// intital vertex and cost
+	current=0;
+	previous[0] = 0;
+	mincost = 444;
+	int netcost = row_col_deduction(cost_matrix);
+	// iterating no of vertices - 1 times
+	for (i=0; i<vertices-1; i++){
+		cout << "\n--------------------------------------------------" << endl;
+		cout << "Current Vertex: "<< vertex_array[current] << endl;
+		// visiting the vertices and checking for min cost among them
+		for (v=0; v<vertices; v++){
+			cost = 0;
+			visited[current] = 1;
+			//copying cost_matrix to temp_matrix for calculation purpose;
+			for (m=0; m<vertices; m++){
+				for(n=0; n<vertices; m++) temp_matrix[m][n] = cost_matrix[m][n];
+			}
+			// if vertex is already visited, then continue for next vertex
+			if (visited[j] == 1) continue;
+			// else visiting vertex v
+			// noting m[a][b] to cost variable
+			cost = cost_matrix[current][j];
+			// making current row and col for vertex v infinity
+			for (k=0; k<vertices; k++){
+				temp_matrix[current][k] = 444;
+				temp_matrix[k][v] = 444;
+			}
+			// also making row v and col current to infinity 
+			temp_matrix[v][current] = 444;
+			// adding current deduction cost with previous cost
+			if (cost != 444) cost = cost + row_col_deduction(temp_matrix);
+			// if cost is min for current vertex
+			if (cost <= mincost){
+				mincost = cost;
+				next = v;
+				// copying temp_matrix to temp2_matrix for future path discovery
+				for (m=0; m<vertices; m++){
+					for(int n=0; n<vertices; n++) temp2_matrix[m][n] = temp_matrix[m][n];
+				}
+			}
+			cout << "Cost for path " << vertex_array[current] << " -> " << vertex_array[j] << ": ";
+			cout << netcost << " + " << cost << " = " << netcost+cost << endl;
+		}
+		// now current is vertex with min cost
+		cout << "\nvisiting Vertex : " << vertex_array[current] << " -> " << vertex_array[next];
+		previous[next] = current;
+		current = next;
+		visited[current] = 1;
+		// updating netcost of path and the cost matrix
+		netcost = netcost + mincost;
+		for (k=0; k<vertices; k++){
+			for(int m=0; m<vertices; m++) cost_matrix[k][m] = temp2_matrix[k][m];
+		}
+
+	}
+	previous[0] = current;
+	cout << "\n==================================================" << endl;
+	cout << "\nOptimal Path is :- ";
+	int temp1 = 0;
+	for (i=0; i<vertices; i++){
+			cout << vertex_array[temp1] << " <- " ;
+			temp1 = previous[temp1];
+	}
+	cout << "A" <<  "\nCost of Optimal path :- " << netcost << " units" << endl;
+
+}
+
+ShortestDistance::~ShortestDistance() {
+	// TODO Auto-generated destructor stub
+}
+
+
+
+==============================================================================
+========================================MAIN==================================
+==============================================================================
+
+
+//============================================================================
+// Name        : travelling_salesman.cpp
+// Author      : Shubham Sardar
+// Version     :
+// Copyright   : Your copyright notice
+// Description : Hello World in C++, Ansi-style
+//============================================================================
+
+#include "ShortestDistance.h"
+#include <iostream>
+using namespace std;
+
+int main() {
+	// creating instance of the class
+	ShortestDistance S;
+	S.travellingSalesman();	// invoking travelling salesman algorithm
+	return 0;
+}
+
+
+
+==============================================================================
+=======================================OUTPUT=================================
+==============================================================================
+
+Enter no of Vertices: 4
+Enter no of Edges: 10
+Enter Vertices name: A B C D
+Enter Vertex name, src vertex, dest vertex, and Weight: -
+Edge 0: A B 4
+Edge 1: A C 12
+Edge 2: A D 7
+Edge 3: B D 18
+Edge 4: B A 5
+Edge 5: C D 6
+Edge 6: D C 3
+Edge 7: D B 2
+Edge 8: D A 10
+Edge 9: C A 11
+Graph Created Successfully!
+
+Cost Matrix is: 
+444 4 12 7 
+5 444 444 18 
+11 444 444 6 
+10 2 3 444 
+
+--------------------------------------------------
+Current Vertex: A
+Cost for path A -> B: 18 + 18 = 36
+Cost for path A -> C: 18 + 7 = 25
+Cost for path A -> D: 18 + 8 = 26
+
+visiting Vertex : A -> C
+--------------------------------------------------
+Current Vertex: C
+Cost for path C -> B: 25 + 444 = 469
+Cost for path C -> D: 25 + 0 = 25
+
+visiting Vertex : C -> D
+--------------------------------------------------
+Current Vertex: D
+Cost for path D -> B: 25 + 0 = 25
+
+visiting Vertex : D -> B
+==================================================
+
+Optimal Path is :- A <- B <- D <- C <- A
+Cost of Optimal path :- 25 units
